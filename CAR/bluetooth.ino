@@ -126,7 +126,7 @@ void getJoystickState(byte data[8])    {
    Serial.print(joyX);  
    Serial.print(", ");  
    Serial.println(joyY);
-   run_by_joystick(joyX,joyY, (int)buttonStatus);
+   run_by_joystick(joyX,joyY, (int)buttonStatus+1);
 }
 
 void getButtonState(int bStatus)  {

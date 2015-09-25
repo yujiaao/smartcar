@@ -182,19 +182,33 @@ void run_by_joystick(int joyX, int joyY, int time_factor){
   int factor = time_factor;
   if(joyX==0 && joyY==0){
     stopp(factor);
+     Serial.println("---");
   }else if(joyX<=2 && joyX>=-2){
-    if(joyY>0)
+    if(joyY>0){
+     Serial.print("advance: ");
+     Serial.println(joyY*factor);
      advance(joyY*factor);
-    else
-     back(joyY*factor);
+    }else{
+     Serial.print("back: ");
+     Serial.println(-joyY*factor);
+     back(-joyY*factor);
+    }
   }else if(joyX>2 && joyX<=6){
-    right(factor);
-  }else if(joyX>6){
+     Serial.print("right: ");
+     Serial.println(factor);
     turnR(factor);
+  }else if(joyX>6){
+     Serial.print("big right: ");
+     Serial.println(factor);
+     right(factor);
   }else if(joyX<-2 && joyX>=-6){
-    left(factor);
-  }else if(joyX<-6){
+     Serial.print("left: ");
+     Serial.println(factor);
     turnL(factor);
+  }else if(joyX<-6){
+     Serial.print("big left: ");
+     Serial.println(factor);
+    left(factor);
   }
 }
 
