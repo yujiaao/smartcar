@@ -6,7 +6,7 @@ int MotorRight2=6;
 int MotorLeft1=10;
 int MotorLeft2=11;
 int counter=0;
-const int irReceiverPin = 2; //紅外線接收器 OUTPUT 訊號接在 pin 2
+const int irReceiverPin = 4; //紅外線接收器 OUTPUT 訊號接在 pin 2
 
 const int BeepPin = A0;
 const int LeftLightPin=A1;
@@ -113,6 +113,8 @@ void setup()
   pinMode(LeftLightPin, OUTPUT);
   pinMode(RightLightPin, OUTPUT);
 
+  BT_setup();
+
 }
 //******************************************************************(Void)
 const int speed_factor=20;
@@ -172,6 +174,30 @@ void back(int g) //後退
   digitalWrite(MotorLeft2,LOW);
   delay(g * speed_factor); 
 }
+
+
+void run_by_joystick(int joyX, int joyY, int time_factor){
+  joyX /=10;
+  joyY /=10;
+  int factor = time_factor;
+  if(joyX==0 && joyY==0){
+    stopp(factor);
+  }else if(joyX<=2 && joyX>=-2){
+    if(joyY>0)
+     advance(joyY*factor);
+    else
+     back(joyY*factor);
+  }else if(joyX>2 && joyX<=6){
+    right(factor);
+  }else if(joyX>6){
+    turnR(factor);
+  }else if(joyX<-2 && joyX>=-6){
+    left(factor);
+  }else if(joyX<-6){
+    turnL(factor);
+  }
+}
+
 void detection() //測量3個角度(前.左.右)
 { 
   int delay_time = 250; // 伺服馬達轉向後的穩定時間
@@ -211,9 +237,8 @@ void detection() //測量3個角度(前.左.右)
   }
 }   
 //*********************************************************************************
-void ask_pin_F() // 量出前方距離 
-{
-  myservo.write(90);
+float distance(int degree){
+  myservo.write(degree);
   digitalWrite(outputPin, LOW); // 讓超聲波發射低電壓2μs
   delayMicroseconds(2);
   digitalWrite(outputPin, HIGH); // 讓超聲波發射高電壓10μs，這裡至少是10μs
@@ -221,41 +246,25 @@ void ask_pin_F() // 量出前方距離
   digitalWrite(outputPin, LOW); // 維持超聲波發射低電壓
   float Fdistance = pulseIn(inputPin, HIGH); // 讀差相差時間
   Fdistance= Fdistance/5.8/10; // 將時間轉為距離距离（單位：公分）
-  Serial.print("F distance:"); //輸出距離（單位：公分）
+  Serial.print(degree); //輸出距離（單位：公分）
+  Serial.print(" distance:"); //輸出距離（單位：公分）
   Serial.println(Fdistance); //顯示距離
-  Fspeedd = Fdistance; // 將距離 讀入Fspeedd(前速)
+  return Fdistance; 
+}
+
+void ask_pin_F() // 量出前方距離 
+{
+  Fspeedd = distance(90); // 將距離 讀入Fspeedd(前速)
 } 
 //********************************************************************************
 void ask_pin_L() // 量出左邊距離 
 {
-  myservo.write(177);
-  delay(delay_time);
-  digitalWrite(outputPin, LOW); // 讓超聲波發射低電壓2μs
-  delayMicroseconds(2);
-  digitalWrite(outputPin, HIGH); // 讓超聲波發射高電壓10μs，這裡至少是10μs
-  delayMicroseconds(10);
-  digitalWrite(outputPin, LOW); // 維持超聲波發射低電壓
-  float Ldistance = pulseIn(inputPin, HIGH); // 讀差相差時間
-  Ldistance= Ldistance/5.8/10; // 將時間轉為距離距离（單位：公分）
-  Serial.print("L distance:"); //輸出距離（單位：公分）
-  Serial.println(Ldistance); //顯示距離
-  Lspeedd = Ldistance; // 將距離 讀入Lspeedd(左速)
+  Lspeedd = distance(177); // 將距離 讀入Lspeedd(左速)
 } 
 //******************************************************************************
 void ask_pin_R() // 量出右邊距離 
 {
-  myservo.write(5);
-  delay(delay_time);
-  digitalWrite(outputPin, LOW); // 讓超聲波發射低電壓2μs
-  delayMicroseconds(2);
-  digitalWrite(outputPin, HIGH); // 讓超聲波發射高電壓10μs，這裡至少是10μs
-  delayMicroseconds(10);
-  digitalWrite(outputPin, LOW); // 維持超聲波發射低電壓
-  float Rdistance = pulseIn(inputPin, HIGH); // 讀差相差時間
-  Rdistance= Rdistance/5.8/10; // 將時間轉為距離距离（單位：公分）
-  Serial.print("R distance:"); //輸出距離（單位：公分）
-  Serial.println(Rdistance); //顯示距離
-  Rspeedd = Rdistance; // 將距離 讀入Rspeedd(右速)
+  Rspeedd = distance(5); // 將距離 讀入Rspeedd(右速)
 } 
 //******************************************************************************(LOOP)
 void beep(int milisecond){
@@ -282,11 +291,157 @@ void toggleLight(){
   }
 }
 
-void loop() 
-{
+void xunji(){
+  while(true){
+
   SL = digitalRead(SensorLeft);
   SM = digitalRead(SensorMiddle);
   SR = digitalRead(SensorRight);
+
+  if (SM == HIGH)//中感測器在黑色區域
+  { 
+    if (SL == LOW & SR == HIGH) // 左黑右白, 向左轉彎
+    {  
+      digitalWrite(MotorRight1,LOW);
+      digitalWrite(MotorRight2,HIGH);
+      analogWrite(MotorLeft1,0);
+      analogWrite(MotorLeft2,80);
+    } 
+    else if (SR == LOW & SL == HIGH) //左白右黑, 向右轉彎
+    {  
+      analogWrite(MotorRight1,0);//右轉
+      analogWrite(MotorRight2,80);
+      digitalWrite(MotorLeft1,LOW);
+      digitalWrite(MotorLeft2,HIGH);
+    }
+    else  // 兩側均為白色, 直進
+    { 
+      digitalWrite(MotorRight1,LOW);
+      digitalWrite(MotorRight2,HIGH);
+      digitalWrite(MotorLeft1,LOW);
+      digitalWrite(MotorLeft2,HIGH);
+      analogWrite(MotorLeft1,200);
+      analogWrite(MotorLeft2,200);
+      analogWrite(MotorRight1,200);
+      analogWrite(MotorRight2,200);
+    }      
+  } 
+  else // 中感測器在白色區域
+  {  
+    if (SL == LOW & SR == HIGH)// 左黑右白, 快速左轉 
+    {  
+      digitalWrite(MotorRight1,LOW);
+      digitalWrite(MotorRight2,HIGH);
+      digitalWrite(MotorLeft1,LOW);
+      digitalWrite(MotorLeft2,LOW);
+    }
+    else if (SR == LOW & SL == HIGH) // 左白右黑, 快速右轉
+    {  
+      digitalWrite(MotorRight1,LOW);
+      digitalWrite(MotorRight2,LOW);
+      digitalWrite(MotorLeft1,LOW);
+      digitalWrite(MotorLeft2,HIGH);
+    }
+    else // 都是白色, 停止
+    {    
+      digitalWrite(MotorRight1,HIGH);
+      digitalWrite(MotorRight2,LOW);
+      digitalWrite(MotorLeft1,HIGH);
+      digitalWrite(MotorLeft2,LOW);
+      
+    }
+  }
+  if (irrecv.decode(&results))
+  {
+    irrecv.resume(); 
+    Serial.println(results.value,HEX);
+    if(results.value ==IRstop)
+    { 
+      digitalWrite(MotorRight1,HIGH);
+      digitalWrite(MotorRight2,HIGH);
+      digitalWrite(MotorLeft1,HIGH);
+      digitalWrite(MotorLeft2,HIGH);
+      break;
+    }
+  }
+  }
+  results.value=0;  
+}
+
+boolean wantStop(){
+      if (irrecv.decode(&results))
+      {
+        irrecv.resume(); 
+        Serial.println(results.value,HEX);
+        if(results.value ==IRstop)
+        { 
+          stopp(0);
+          return true;
+        }
+      }
+      results.value=0;
+    return false;
+}
+
+
+void echo(){
+  while(true){
+    myservo.write(90); //讓伺服馬達回歸 預備位置 準備下一次的測量
+    detection(); //測量角度 並且判斷要往哪一方向移動
+    if(directionn == 8) //假如directionn(方向) = 8(前進) 
+    { 
+      if(!wantStop()){
+      advance(1); // 正常前進 
+      Serial.print(" Advance "); //顯示方向(前進)
+      Serial.print(" ");
+      } else break;
+    }
+    if(directionn == 2) //假如directionn(方向) = 2(倒車) 
+    {
+      if(!wantStop()){
+      back(8); // 倒退(車)
+      turnL(3); //些微向左方移動(防止卡在死巷裡)
+      Serial.print(" Reverse "); //顯示方向(倒退)
+     }else break;
+    }
+    if(directionn == 6) //假如directionn(方向) = 6(右轉) 
+    {
+      if(!wantStop()){
+      
+      back(1); 
+      turnR(6); // 右轉
+      Serial.print(" Right "); //顯示方向(左轉)
+      }else break;
+    }
+    if(directionn == 4) //假如directionn(方向) = 4(左轉) 
+    { 
+     if(!wantStop()){
+      back(1); 
+      turnL(6); // 左轉
+      Serial.print(" Left "); //顯示方向(右轉) 
+      }else break;
+    } 
+
+    if (irrecv.decode(&results))
+    {
+      irrecv.resume(); 
+      Serial.println(results.value,HEX);
+      if(results.value ==IRstop)
+      { 
+        stopp(0);
+        break;
+      }
+    }
+  }
+  results.value=0;
+}
+
+
+void loop() 
+{
+
+  BT_loop();
+
   //***************************************************************************正常遙控模式      
   if (irrecv.decode(&results)) 
   {         // 解碼成功，收到一組紅外線訊號
@@ -317,200 +472,27 @@ void loop()
     /***********************************************************************/
     if (results.value == IRstop || results.value == IRpower)//停止
     {
-      digitalWrite(MotorRight1,LOW);
-      digitalWrite(MotorRight2,LOW);
-      digitalWrite(MotorLeft1,LOW);
-      digitalWrite(MotorLeft2,LOW);
+       stopp(0);
     }
     //***********************************************************************cny70模式自走模式 黑:LOW 白:
     if (results.value == IRcny70)
     {                     
-      while(IRcny70)
-      {  
-        SL = digitalRead(SensorLeft);
-        SM = digitalRead(SensorMiddle);
-        SR = digitalRead(SensorRight);
-
-        if (SM == HIGH)//中感測器在黑色區域
-        { 
-          if (SL == LOW & SR == HIGH) // 左黑右白, 向左轉彎
-          {  
-            digitalWrite(MotorRight1,LOW);
-            digitalWrite(MotorRight2,HIGH);
-            analogWrite(MotorLeft1,0);
-            analogWrite(MotorLeft2,80);
-          } 
-          else if (SR == LOW & SL == HIGH) //左白右黑, 向右轉彎
-          {  
-            analogWrite(MotorRight1,0);//右轉
-            analogWrite(MotorRight2,80);
-            digitalWrite(MotorLeft1,LOW);
-            digitalWrite(MotorLeft2,HIGH);
-          }
-          else  // 兩側均為白色, 直進
-          { 
-            digitalWrite(MotorRight1,LOW);
-            digitalWrite(MotorRight2,HIGH);
-            digitalWrite(MotorLeft1,LOW);
-            digitalWrite(MotorLeft2,HIGH);
-            analogWrite(MotorLeft1,200);
-            analogWrite(MotorLeft2,200);
-            analogWrite(MotorRight1,200);
-            analogWrite(MotorRight2,200);
-          }      
-        } 
-        else // 中感測器在白色區域
-        {  
-          if (SL == LOW & SR == HIGH)// 左黑右白, 快速左轉 
-          {  
-            digitalWrite(MotorRight1,LOW);
-            digitalWrite(MotorRight2,HIGH);
-            digitalWrite(MotorLeft1,LOW);
-            digitalWrite(MotorLeft2,LOW);
-          }
-          else if (SR == LOW & SL == HIGH) // 左白右黑, 快速右轉
-          {  
-            digitalWrite(MotorRight1,LOW);
-            digitalWrite(MotorRight2,LOW);
-            digitalWrite(MotorLeft1,LOW);
-            digitalWrite(MotorLeft2,HIGH);
-          }
-          else // 都是白色, 停止
-          {    
-            digitalWrite(MotorRight1,HIGH);
-            digitalWrite(MotorRight2,LOW);
-            digitalWrite(MotorLeft1,HIGH);
-            digitalWrite(MotorLeft2,LOW);
-            ;
-          }
-        }
-        if (irrecv.decode(&results))
-        {
-          irrecv.resume(); 
-          Serial.println(results.value,HEX);
-          if(results.value ==IRstop)
-          { 
-            digitalWrite(MotorRight1,HIGH);
-            digitalWrite(MotorRight2,HIGH);
-            digitalWrite(MotorLeft1,HIGH);
-            digitalWrite(MotorLeft2,HIGH);
-            break;
-          }
-        }
-      }
-      results.value=0;
+      
+        xunji();
+            
     }
     else
       //***********************************************************************超音波自走模式
       if (results.value ==IRAutorun )
       {
-        while(IRAutorun)
-        {
-          myservo.write(90); //讓伺服馬達回歸 預備位置 準備下一次的測量
-          detection(); //測量角度 並且判斷要往哪一方向移動
-          if(directionn == 8) //假如directionn(方向) = 8(前進) 
-          { 
-            if (irrecv.decode(&results))
-            {
-              irrecv.resume(); 
-              Serial.println(results.value,HEX);
-              if(results.value ==IRstop)
-              { 
-                digitalWrite(MotorRight1,LOW); 
-                digitalWrite(MotorRight2,LOW);
-                digitalWrite(MotorLeft1,LOW);
-                digitalWrite(MotorLeft2,LOW);
-                break;
-              }
-            }
-            results.value=0;
-            advance(1); // 正常前進 
-            Serial.print(" Advance "); //顯示方向(前進)
-            Serial.print(" "); 
-          }
-          if(directionn == 2) //假如directionn(方向) = 2(倒車) 
-          {
-            if (irrecv.decode(&results))
-            {
-              irrecv.resume(); 
-              Serial.println(results.value,HEX);
-              if(results.value ==IRstop)
-              { 
-                digitalWrite(MotorRight1,LOW); 
-                digitalWrite(MotorRight2,LOW);
-                digitalWrite(MotorLeft1,LOW);
-                digitalWrite(MotorLeft2,LOW);
-                break;
-              }
-            }
-            results.value=0;
-            back(8); // 倒退(車)
-            turnL(3); //些微向左方移動(防止卡在死巷裡)
-            Serial.print(" Reverse "); //顯示方向(倒退)
-          }
-          if(directionn == 6) //假如directionn(方向) = 6(右轉) 
-          {
-            if (irrecv.decode(&results))
-            {
-              irrecv.resume(); 
-              Serial.println(results.value,HEX);
-              if(results.value ==IRstop)
-              { 
-                digitalWrite(MotorRight1,LOW); 
-                digitalWrite(MotorRight2,LOW);
-                digitalWrite(MotorLeft1,LOW);
-                digitalWrite(MotorLeft2,LOW);
-                break;
-              }
-            }
-            results.value=0;
-            back(1); 
-            turnR(6); // 右轉
-            Serial.print(" Right "); //顯示方向(左轉)
-          }
-          if(directionn == 4) //假如directionn(方向) = 4(左轉) 
-          { 
-            if (irrecv.decode(&results))
-            {
-              irrecv.resume(); 
-              Serial.println(results.value,HEX);
-              if(results.value ==IRstop)
-              { 
-                digitalWrite(MotorRight1,LOW); 
-                digitalWrite(MotorRight2,LOW);
-                digitalWrite(MotorLeft1,LOW);
-                digitalWrite(MotorLeft2,LOW);
-                break;
-              }
-            }
-            results.value=0;
-            back(1); 
-            turnL(6); // 左轉
-            Serial.print(" Left "); //顯示方向(右轉) 
-          } 
-
-          if (irrecv.decode(&results))
-          {
-            irrecv.resume(); 
-            Serial.println(results.value,HEX);
-            if(results.value ==IRstop)
-            { 
-              digitalWrite(MotorRight1,LOW); 
-              digitalWrite(MotorRight2,LOW);
-              digitalWrite(MotorLeft1,LOW);
-              digitalWrite(MotorLeft2,LOW);
-              break;
-            }
-          }
-        }
-        results.value=0;
+        
+        echo();
+        
+        
       }
       else
       {
-        digitalWrite(MotorRight1,LOW);
-        digitalWrite(MotorRight2,LOW);
-        digitalWrite(MotorLeft1,LOW);
-        digitalWrite(MotorLeft2,LOW);
+        stopp(0);
       }
     /***********************************************************************/
     if (results.value ==IRBeep )
