@@ -1,16 +1,41 @@
 #include <IRremote.h>  
 #include <Servo.h>
+
+//*************************定義CNY70腳位************************************
+const int SensorLeft = 7;      //左感測器輸入腳
+const int SensorMiddle= 4 ;    //中感測器輸入腳
+const int SensorRight = 3;     //右感測器輸入腳
+int SL;    //左感測器狀態
+int SM;    //中感測器狀態
+int SR;    //右感測器狀態
+IRrecv irrecv(irReceiverPin);  // 定義 IRrecv 物件來接收紅外線訊號
+decode_results results;       // 解碼結果將放在 decode_results 結構的 result 變數裏
+//*************************定義超音波腳位******************************
+const int outputPin =12; // 定義超音波信號發射腳位'tx
+const int inputPin =13 ; // 定義超音波信號接收腳位rx
+int Fspeedd = 0; // 前方距離
+int Rspeedd = 0; // 右方距離
+int Lspeedd = 0; // 左方距離
+int directionn = 0; // 前=8 後=2 左=4 右=6 
+Servo myservo; // 設 myservo
+int delay_time = 250; // 伺服馬達轉向後的穩定時間
+int Fgo = 8; // 前進
+int Rgo = 6; // 右轉
+int Lgo = 4; // 左轉
+int Bgo = 2; // 倒車
 //***********************定義馬達腳位*************************
-int MotorRight1=5;
-int MotorRight2=6;
-int MotorLeft1=10;
-int MotorLeft2=11;
-int counter=0;
+const int MotorRight1=5;
+const int MotorRight2=6;
+const int MotorLeft1=10;
+const int MotorLeft2=11;
 const int irReceiverPin = 4; //紅外線接收器 OUTPUT 訊號接在 pin 2
 
 const int BeepPin = A0;
 const int LeftLightPin=A1;
 const int RightLightPin=A2;
+const int PhotocellPin=A3;
+
+int counter=0;
 
 //***********************設定所偵測到的IRcode*************************
 /*
@@ -38,6 +63,9 @@ long IRfront= 0x00FF629D;        //前進碼 //ff629d
  */
 boolean leftLightOn=false;
 boolean rightLightOn=false;
+boolean autoLight = true; //用光敏电阻测光,启动后为自动模式,一旦手工干预即转为手动模式
+int minLight = 350;//200;   // 最小光線門檻值
+int ledState = 0;         //当前灯光亮还是不亮
 
 //default 1:ff6897  2:nec ff9867 3:ffb04f 4:ff30cf 5:ff18e7 
 //        6:ff7a85 7:ff10ef  8: ff38e7 9:ff5aa5 0:ff4ab5 *:ff42bd  #:ff52ad ok:ff02fd
@@ -64,31 +92,10 @@ long IRLeftLight=0x20258A7; //pressed *
 long IRRightLight=0x20242BD; //pressed #
 //超音波自走模式 
 long IRturnsmallleft= 0x20200FF;  //middle blank button
+long IRrepeat=0xFFFFFFFF; //按住某键不松手
 
 
 
-//*************************定義CNY70腳位************************************
-const int SensorLeft = 7;      //左感測器輸入腳
-const int SensorMiddle= 4 ;    //中感測器輸入腳
-const int SensorRight = 3;     //右感測器輸入腳
-int SL;    //左感測器狀態
-int SM;    //中感測器狀態
-int SR;    //右感測器狀態
-IRrecv irrecv(irReceiverPin);  // 定義 IRrecv 物件來接收紅外線訊號
-decode_results results;       // 解碼結果將放在 decode_results 結構的 result 變數裏
-//*************************定義超音波腳位******************************
-int inputPin =13 ; // 定義超音波信號接收腳位rx
-int outputPin =12; // 定義超音波信號發射腳位'tx
-int Fspeedd = 0; // 前方距離
-int Rspeedd = 0; // 右方距離
-int Lspeedd = 0; // 左方距離
-int directionn = 0; // 前=8 後=2 左=4 右=6 
-Servo myservo; // 設 myservo
-int delay_time = 250; // 伺服馬達轉向後的穩定時間
-int Fgo = 8; // 前進
-int Rgo = 6; // 右轉
-int Lgo = 4; // 左轉
-int Bgo = 2; // 倒車
 //********************************************************************(SETUP)
 
 void setup()
@@ -112,9 +119,10 @@ void setup()
   pinMode(BeepPin, OUTPUT);
   pinMode(LeftLightPin, OUTPUT);
   pinMode(RightLightPin, OUTPUT);
+  pinMode(PhotocellPin, INPUT);
 
   BT_setup();
-
+  Notes_play();
 }
 //******************************************************************(Void)
 const int speed_factor=20;
@@ -291,14 +299,35 @@ void beep(int milisecond){
 }
 
 void toggleLight(){
+  if(autoLight){
+    int photocellVal = analogRead(PhotocellPin);
+    Serial.print("photocell=");   
+    Serial.println(photocellVal);   
+    
+     
+    // 光線不足時打開 LED
+    if (photocellVal < minLight && ledState == 0) {
+      leftLightOn = true;
+      rightLightOn = true;
+      ledState = 1;
+    }
+     
+    // 光線充足時關掉 LED
+    if (photocellVal > minLight && ledState == 1) {
+      leftLightOn = false;
+      rightLightOn = false;
+      ledState = 0;
+    }  
+  } 
+      
   if(leftLightOn){
-    analogWrite(LeftLightPin,200);
+    analogWrite(LeftLightPin,150);
   } 
   else{
     analogWrite(LeftLightPin,0);
   }
   if(rightLightOn){
-    analogWrite(RightLightPin,200);
+    analogWrite(RightLightPin,150);
   } 
   else{
     analogWrite(RightLightPin,0);
@@ -387,7 +416,7 @@ boolean wantStop(){
       {
         irrecv.resume(); 
         Serial.println(results.value,HEX);
-        if(results.value ==IRstop)
+        if(results.value ==IRstop || results.value == IRpower)
         { 
           stopp(0);
           return true;
@@ -455,7 +484,10 @@ void loop()
 {
 
   BT_loop();
+  
 
+
+  
   //***************************************************************************正常遙控模式      
   if (irrecv.decode(&results)) 
   {         // 解碼成功，收到一組紅外線訊號
@@ -518,21 +550,25 @@ void loop()
     /***********************************************************************/
     if (results.value ==IRLeftLight )
     {
+      autoLight = false;
       leftLightOn = !leftLightOn;
-      toggleLight();
+      //toggleLight();
     }
     /***********************************************************************/
     /***********************************************************************/
     if (results.value ==IRRightLight )
     {
+      autoLight = false;
       rightLightOn = !rightLightOn;
-      toggleLight();
+      //toggleLight();
     }
     /***********************************************************************/
 
 
     irrecv.resume();    // 繼續收下一組紅外線訊號        
   }  
+  
+  toggleLight();
 }
 
 
