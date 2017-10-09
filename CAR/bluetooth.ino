@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
 
-#define VERSION     "\n\nAndroTest V2.0 - @kas2014\ndemo for V5.x App"
+#define VERSION     "\n\nAndroTest V2.0 - @kas2014\ndemo for V5.x App\n"
 
 // V2.0  changed to pure ASCII Communication Protocol ** not backward compatible **
 // V1.4  improved communication errors handling
@@ -29,11 +29,11 @@
 
 #define    STX          0x02
 #define    ETX          0x03
-#define    ledPin       13
+
 #define    SLOW         750                            // Datafields refresh rate (ms)
 #define    FAST         250                             // Datafields refresh rate (ms)
 
-SoftwareSerial mySerial(2,3);                           // BlueTooth module: pin#2=TX pin#3=RX
+SoftwareSerial mySerial(BlueToothTXPin,BlueToothRXPin);                           // BlueTooth module: pin#2=TX pin#3=RX
 byte cmd[8] = {0, 0, 0, 0, 0, 0, 0, 0};                 // bytes received
 byte buttonStatus = 0;                                  // first Byte sent to Android device
 long previousMillis = 0;                                // will store last time Buttons status was updated
@@ -41,13 +41,13 @@ long sendInterval = SLOW;                               // interval between Butt
 String displayStatus = "xxxx";                          // message to Android device
 
 extern void run_by_joystick(int joyX, int joyY, int time_factor);
-
+extern void onButton1On();
+extern void onButton1Off();
+extern void out(String message);
+extern void out(long message);
 void BT_setup()  {
- //Serial.begin(57600);
- //mySerial.begin(9600);                                // 57600 = max value for softserial
  mySerial.begin(9600);                                // 57600 = max value for softserial
- pinMode(ledPin, OUTPUT);    
- Serial.println(VERSION);
+ out(VERSION);
  while(mySerial.available())  mySerial.read();         // empty RX buffer
 }
 
@@ -122,10 +122,7 @@ void getJoystickState(byte data[8])    {
  if(joyX<-100 || joyX>100 || joyY<-100 || joyY>100)     return;      // commmunication error
  
 // Your code here ...
-   Serial.print("Joystick position:  ");
-   Serial.print(joyX);  
-   Serial.print(", ");  
-   Serial.println(joyY);
+   out(String("Joystick position:  ")+String(joyX)+String(", ")+String(joyY));
    run_by_joystick(joyX,joyY, (int)buttonStatus+1);
 }
 
@@ -134,75 +131,77 @@ void getButtonState(int bStatus)  {
 // -----------------  BUTTON #1  -----------------------
    case 'A':
      buttonStatus |= B000001;        // ON
-     Serial.println("\n** Button_1: ON **");
+     out("\n** Button_1: ON **");
      // your code...      
      displayStatus = "LED <ON>";
-     Serial.println(displayStatus);
-     digitalWrite(ledPin, HIGH);
+     out(displayStatus);
+     //digitalWrite(ledPin, HIGH);
+     onButton1On();
      break;
    case 'B':
      buttonStatus &= B111110;        // OFF
-     Serial.println("\n** Button_1: OFF **");
+     out("\n** Button_1: OFF **");
      // your code...      
      displayStatus = "LED <OFF>";
-     Serial.println(displayStatus);
-     digitalWrite(ledPin, LOW);
+     out(displayStatus);
+     //digitalWrite(ledPin, LOW);
+     onButton1Off();
      break;
 
 // -----------------  BUTTON #2  -----------------------
    case 'C':
      buttonStatus |= B000010;        // ON
-     Serial.println("\n** Button_2: ON **");
+     out("\n** Button_2: ON **");
      // your code...      
      displayStatus = "Button2 <ON>";
-     Serial.println(displayStatus);
+     out(displayStatus);
      break;
    case 'D':
      buttonStatus &= B111101;        // OFF
-     Serial.println("\n** Button_2: OFF **");
+     out("\n** Button_2: OFF **");
      // your code...      
      displayStatus = "Button2 <OFF>";
-     Serial.println(displayStatus);
+     out(displayStatus);
      break;
 
 // -----------------  BUTTON #3  -----------------------
    case 'E':
      buttonStatus |= B000100;        // ON
-     Serial.println("\n** Button_3: ON **");
+     out("\n** Button_3: ON **");
      // your code...      
      displayStatus = "Motor #1 enabled"; // Demo text message
-     Serial.println(displayStatus);
+     out(displayStatus);
      break;
    case 'F':
      buttonStatus &= B111011;      // OFF
-     Serial.println("\n** Button_3: OFF **");
+     out("\n** Button_3: OFF **");
      // your code...      
      displayStatus = "Motor #1 stopped";
-     Serial.println(displayStatus);
+     out(displayStatus);
      break;
 
 // -----------------  BUTTON #4  -----------------------
    case 'G':
      buttonStatus |= B001000;       // ON
-     Serial.println("\n** Button_4: ON **");
+     out("\n** Button_4: ON **");
      // your code...      
      displayStatus = "Datafield update <FAST>";
-     Serial.println(displayStatus);
+     out(displayStatus);
      sendInterval = FAST;
      break;
    case 'H':
      buttonStatus &= B110111;    // OFF
-     Serial.println("\n** Button_4: OFF **");
+     out("\n** Button_4: OFF **");
      // your code...      
      displayStatus = "Datafield update <SLOW>";
-     Serial.println(displayStatus);
+     out(displayStatus);
      sendInterval = SLOW;
     break;
 
 // -----------------  BUTTON #5  -----------------------
    case 'I':           // configured as momentary button
 //      buttonStatus |= B010000;        // ON
-     Serial.println("\n** Button_5: ++ pushed ++ **");
+     out("\n** Button_5: ++ pushed ++ **");
      // your code...      
      displayStatus = "Button5: <pushed>";
      break;
@@ -214,13 +213,13 @@ void getButtonState(int bStatus)  {
 // -----------------  BUTTON #6  -----------------------
    case 'K':
      buttonStatus |= B100000;        // ON
-     Serial.println("\n** Button_6: ON **");
+     out("\n** Button_6: ON **");
      // your code...      
       displayStatus = "Button6 <ON>"; // Demo text message
     break;
    case 'L':
      buttonStatus &= B011111;        // OFF
-     Serial.println("\n** Button_6: OFF **");
+     out("\n** Button_6: OFF **");
      // your code...      
      displayStatus = "Button6 <OFF>";
      break;

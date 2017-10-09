@@ -1,6 +1,68 @@
-#include <IRremote.h>  
-#include <Servo.h>
+#if 1
+__asm volatile ("nop");
+#endif
 
+//#define USE_IRremote
+#define USE_IRsensor
+//#define USE_LCD
+#define USE_BLUETOOTH
+#define USE_SUPERSONIC
+//#define USE_TONE
+
+#ifdef USE_IRremote
+  #include <IRremote.h>  
+#endif
+
+#include <Servo.h>
+#include "Wire.h" // for I2C bus
+
+#ifdef USE_LCD
+  #include "LiquidCrystal_I2C.h" // for I2C bus LCD module https://www.dfrobot.com/wiki/index.php?title=I2C/TWI_LCD1602_Module_%28Gadgeteer_Compatible%29_%28SKU:_DFR0063%29
+  LiquidCrystal_I2C lcd(0x27,16,2);  //16字符,2行,I2C地址为0x27 0~127,与其他设备不重复即可 NOTE: The default address is 0x20. All the jumper caps will be connected from the factory.  
+#endif
+
+/**
+ * 
+A2  A1  A0  IIC Address
+0   0   0   0x20
+0   0   1   0x21
+0   1   0   0x22
+0   1   1   0x23
+1   0   0   0x24
+1   0   1   0x25
+1   1   0   0x26
+1   1   1   0x27
+ */
+
+//#define CAR_ONE
+
+//#ifdef CAR_ONE
+  #define BlueToothTXPin 0
+  #define BlueToothRXPin 1
+//#else 
+//2号车暂时连的是2,3
+//   #define BlueToothTXPin 2
+//   #define BlueToothRXPin 3
+//#endif
+
+//***********************定義馬達腳位*************************
+const int MotorRight1=5;
+const int MotorRight2=6;
+const int MotorLeft1=10;
+const int MotorLeft2=11;
+const int irReceiverPin = 2; //紅外線接收器 OUTPUT 訊號接在 pin 2
+
+#ifdef USE_TONE
+const int TonePin = 8;
+#endif
+
+const int ServoPin = 9;
+const int BeepPin = A0;
+const int LeftLightPin=A1;
+const int RightLightPin=A2;
+const int PhotocellPin=A3;
+
+int counter=0;
 //*************************定義CNY70腳位************************************
 const int SensorLeft = 7;      //左感測器輸入腳
 const int SensorMiddle= 4 ;    //中感測器輸入腳
@@ -8,8 +70,28 @@ const int SensorRight = 3;     //右感測器輸入腳
 int SL;    //左感測器狀態
 int SM;    //中感測器狀態
 int SR;    //右感測器狀態
+
+#ifdef USE_IRremote
 IRrecv irrecv(irReceiverPin);  // 定義 IRrecv 物件來接收紅外線訊號
 decode_results results;       // 解碼結果將放在 decode_results 結構的 result 變數裏
+
+long IRfront= 0x202D02F;        //前進碼 //ff629d
+long IRback=0x202708F;         //後退    //ffa857
+long IRturnright=0x2028877;    //右轉     //ffc23d
+long IRturnleft= 0x20208F7;     //左轉  //ff22dd
+long IRstop=0x202B04F;         //停止 OK   //d7e84b1b
+long IRpower = 0x20250AF;
+long IRcny70=0x202807F;        //CNY70自走模式 //1:nec ff6897
+long IRAutorun=0x20240BF;       //2   
+long IRBeep = 0x202F00F; //press 7
+long IRLeftLight=0x20258A7; //pressed *
+long IRRightLight=0x20242BD; //pressed #
+//超音波自走模式 
+long IRturnsmallleft= 0x20200FF;  //middle blank button
+long IRrepeat=0xFFFFFFFF; //按住某键不松手
+
+#endif
+
 //*************************定義超音波腳位******************************
 const int outputPin =12; // 定義超音波信號發射腳位'tx
 const int inputPin =13 ; // 定義超音波信號接收腳位rx
@@ -23,19 +105,6 @@ int Fgo = 8; // 前進
 int Rgo = 6; // 右轉
 int Lgo = 4; // 左轉
 int Bgo = 2; // 倒車
-//***********************定義馬達腳位*************************
-const int MotorRight1=5;
-const int MotorRight2=6;
-const int MotorLeft1=10;
-const int MotorLeft2=11;
-const int irReceiverPin = 4; //紅外線接收器 OUTPUT 訊號接在 pin 2
-
-const int BeepPin = A0;
-const int LeftLightPin=A1;
-const int RightLightPin=A2;
-const int PhotocellPin=A3;
-
-int counter=0;
 
 //***********************設定所偵測到的IRcode*************************
 /*
@@ -79,21 +148,6 @@ int ledState = 0;         //当前灯光亮还是不亮
 //        up 202D02F left 20208F7 right 2028877 down 202708F ok 202B04F  power 20250AF
 //        mute 202F00F sound-up 202A857
 
-long IRfront= 0x202D02F;        //前進碼 //ff629d
-long IRback=0x202708F;         //後退    //ffa857
-long IRturnright=0x2028877;    //右轉     //ffc23d
-long IRturnleft= 0x20208F7;     //左轉  //ff22dd
-long IRstop=0x202B04F;         //停止 OK   //d7e84b1b
-long IRpower = 0x20250AF;
-long IRcny70=0x202807F;        //CNY70自走模式 //1:nec ff6897
-long IRAutorun=0x20240BF;       //2   
-long IRBeep = 0x202F00F; //press 7
-long IRLeftLight=0x20258A7; //pressed *
-long IRRightLight=0x20242BD; //pressed #
-//超音波自走模式 
-long IRturnsmallleft= 0x20200FF;  //middle blank button
-long IRrepeat=0xFFFFFFFF; //按住某键不松手
-
 
 
 //********************************************************************(SETUP)
@@ -107,23 +161,53 @@ void setup()
   pinMode(MotorRight2, OUTPUT);  // 腳位 9 (PWM)
   pinMode(MotorLeft1,  OUTPUT);  // 腳位 10 (PWM) 
   pinMode(MotorLeft2,  OUTPUT);  // 腳位 11 (PWM)
+
+#ifdef USE_IRremote  
   irrecv.enableIRIn();     // 啟動紅外線解碼
+#endif
+
   pinMode(SensorLeft, INPUT); //定義左感測器
   pinMode(SensorMiddle, INPUT);//定義中感測器
   pinMode(SensorRight, INPUT); //定義右感測器
   digitalWrite(2,HIGH);
   pinMode(inputPin, INPUT); // 定義超音波輸入腳位
   pinMode(outputPin, OUTPUT); // 定義超音波輸出腳位 
-  myservo.attach(9); // 定義伺服馬達輸出第5腳位(PWM)
+  myservo.attach(ServoPin); // 定義伺服馬達輸出第9腳位(PWM)
 
   pinMode(BeepPin, OUTPUT);
   pinMode(LeftLightPin, OUTPUT);
   pinMode(RightLightPin, OUTPUT);
   pinMode(PhotocellPin, INPUT);
 
+#ifndef CAR_ONE
   BT_setup();
-  Notes_play();
+#endif
+
+#ifdef USE_TONE
+  Notes_play(TonePin);
+#endif
+
+#ifdef USE_LCD
+  lcd.init();          // initialize the lcd
+  lcd.backlight(); // turn on LCD backlight
+  lcd.print("Hello SmartCar  ");
+  delay(500);
+  lcd.setCursor(0, 0);
+  lcd.print("I am Robot!     ");
+  delay(500);
+ #endif
+ 
+  out("Who are you?    ");
 }
+
+void out(String message){
+  Serial.print(message);
+ #ifdef USE_LCD 
+  lcd.setCursor(0, 1);
+  lcd.print(message);
+ #endif
+}
+
 //******************************************************************(Void)
 const int speed_factor=20;
 void advance(int a) // 前進
@@ -268,9 +352,10 @@ float distance(int degree){
   digitalWrite(outputPin, LOW); // 維持超聲波發射低電壓
   float Fdistance = pulseIn(inputPin, HIGH); // 讀差相差時間
   Fdistance= Fdistance/5.8/10; // 將時間轉為距離距离（單位：公分）
-  Serial.print(degree); //輸出距離（單位：公分）
-  Serial.print(" distance:"); //輸出距離（單位：公分）
-  Serial.println(Fdistance); //顯示距離
+  out(String(degree)+" distance:"+String(Fdistance)+"\n");
+  // Serial.print(degree); //輸出距離（單位：公分）
+  //Serial.print(" distance:"); //輸出距離（單位：公分）
+  //Serial.println(Fdistance); //顯示距離
   return Fdistance; 
 }
 
@@ -297,6 +382,20 @@ void beep(int milisecond){
     delay(milisecond/6*(i+1));
   }
 }
+
+void onButton1On(){
+   autoLight = false;
+   leftLightOn = true;
+   rightLightOn = true;
+   out("onButton1On");
+}
+void onButton1Off(){
+   autoLight = false;
+   leftLightOn = false;
+   rightLightOn = false;
+  out("onButton1Off");
+}
+
 
 void toggleLight(){
   if(autoLight){
@@ -394,6 +493,7 @@ void xunji(){
       
     }
   }
+  #ifdef USE_IRremote  
   if (irrecv.decode(&results))
   {
     irrecv.resume(); 
@@ -407,11 +507,17 @@ void xunji(){
       break;
     }
   }
+  #endif
+  
   }
+  
+  #ifdef USE_IRremote  
   results.value=0;  
+  #endif
 }
 
 boolean wantStop(){
+  #ifdef USE_IRremote  
       if (irrecv.decode(&results))
       {
         irrecv.resume(); 
@@ -423,6 +529,7 @@ boolean wantStop(){
         }
       }
       results.value=0;
+  #endif
     return false;
 }
 
@@ -465,18 +572,23 @@ void echo(){
       }else break;
     } 
 
-    if (irrecv.decode(&results))
-    {
-      irrecv.resume(); 
-      Serial.println(results.value,HEX);
-      if(results.value ==IRstop)
-      { 
-        stopp(0);
-        break;
-      }
-    }
+//#ifdef USE_IRremote
+//    if (irrecv.decode(&results))
+//    {
+//      irrecv.resume(); 
+//      Serial.println(results.value,HEX);
+//      if(results.value ==IRstop)
+//      { 
+//        stopp(0);
+//        break;
+//      }
+//    }
+//#endif
+
   }
+#ifdef USE_IRremote  
   results.value=0;
+#endif
 }
 
 
@@ -484,11 +596,14 @@ void loop()
 {
 
   BT_loop();
-  
 
-
-  
-  //***************************************************************************正常遙控模式      
+  static int loop_count =  0;
+  if(loop_count++>100){
+      loop_count =0;
+      distance(90);
+  }
+  //***************************************************************************正常遙控模式    
+  #ifdef USE_IRremote    
   if (irrecv.decode(&results)) 
   {         // 解碼成功，收到一組紅外線訊號
     /***********************************************************************/
@@ -550,24 +665,20 @@ void loop()
     /***********************************************************************/
     if (results.value ==IRLeftLight )
     {
-      autoLight = false;
-      leftLightOn = !leftLightOn;
-      //toggleLight();
+      onButton1On();
     }
     /***********************************************************************/
     /***********************************************************************/
     if (results.value ==IRRightLight )
     {
-      autoLight = false;
-      rightLightOn = !rightLightOn;
-      //toggleLight();
+      onButton1Off();
     }
     /***********************************************************************/
 
 
     irrecv.resume();    // 繼續收下一組紅外線訊號        
   }  
-  
+  #endif
   toggleLight();
 }
 
