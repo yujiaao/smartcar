@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AbsoluteLayout android:orientation="vertical" android:background="@drawable/k"
+    android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditText android:enabled="false" android:scrollbarStyle="outsideOverlay"
+        android:textSize="22.0dip" android:textColor="#ff000000" android:id="@id/editText1"
+        android:background="@drawable/k" android:scrollbars="vertical" android:layout_width="fill_parent"
+        android:layout_height="360.0dip" android:text="    欢迎使用本软件！本软件主要针对有一定电子技术（主要是单片机）基础的朋友开发的。用两种方式（触屏按钮控制和重力感应控制）来遥控DIY的小车。在使用之前，需要自己动手DIY一辆可以被控制的小车，然后才可以用本软件来控制.本软件的首次使用需要积分（免费的）激活，下载并安装推荐的免费应用后，运行3分钟左右即可得到30——50个积分。激活后“按键遥控”功能完全自由使用（不消耗积分）不限次数，“重力感应”遥控功能开启一次会消耗5个积分，积分小于5时'重力感应'功能自动关闭，需要赚取积分后开启。当积分为0时需要重新激活，所以至少保留一个积分，这样”按钮遥控“功能才能继续自由使用。 关于本软件的使用效果和小车的制作方法及本软件的使用方法，大家可以访问我的博客主页，其中有使用视频 ，DIY小车方法和软件使用的详细说明  博客主页 cwbwss.blog.163.com  还有不懂的请加QQ：1399836578  "
+        android:ems="10" android:inputType="textMultiLine">
+        <requestFocus />
+    </EditText>
+    <Button android:textSize="40.0dip" android:textColor="#ff0000ff" android:id="@id/But"
+        android:layout_width="fill_parent" android:layout_height="86.0dip" android:text="返回"
+        android:layout_x="-1.0dip" android:layout_y="367.0dip" />
+</AbsoluteLayout>

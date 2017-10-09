@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AbsoluteLayout android:id="@id/asd" android:background="@drawable/b" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <Button android:textSize="25.0dip" android:textColor="#ffff0000" android:id="@id/you" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="右转" android:layout_x="210.0dip" android:layout_y="171.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ffff0000" android:id="@id/you1" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="右转" android:layout_x="210.0dip" android:layout_y="171.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ffff0000" android:id="@id/hou" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="后退" android:layout_x="120.0dip" android:layout_y="261.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ffff0000" android:id="@id/hou1" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="后退" android:layout_x="120.0dip" android:layout_y="261.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ffff0000" android:id="@id/zuo" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="左转" android:layout_x="30.0dip" android:layout_y="171.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ffff0000" android:id="@id/zuo1" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="左转" android:layout_x="30.0dip" android:layout_y="171.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ffff0000" android:id="@id/qian" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="前进" android:layout_x="120.0dip" android:layout_y="81.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ffff0000" android:id="@id/qian1" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="前进" android:layout_x="120.0dip" android:layout_y="81.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ff0000ff" android:id="@id/bj" android:layout_width="150.0dip" android:layout_height="wrap_content" android:text="更换背景" android:layout_x="82.0dip" android:layout_y="378.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ff0000ff" android:id="@id/ks" android:layout_width="88.0dip" android:layout_height="wrap_content" android:text="开始" android:layout_x="0.0dip" android:layout_y="378.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ff0000ff" android:id="@id/tc" android:layout_width="95.0dip" android:layout_height="wrap_content" android:text="退出" android:layout_x="226.0dip" android:layout_y="378.0dip" />
+    <TextView android:textSize="35.0dip" android:textColor="#ffff0000" android:id="@id/textView1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Android小车遥控器" android:layout_x="10.0dip" android:layout_y="2.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ff000000" android:id="@id/gy1" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="重力感应" android:layout_x="120.0dip" android:layout_y="171.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ff0000ff" android:id="@id/gy2" android:layout_width="80.0dip" android:layout_height="80.0dip" android:text="重力感应" android:layout_x="120.0dip" android:layout_y="171.0dip" />
+    <Button android:textSize="25.0dip" android:textColor="#ff0000ff" android:id="@id/ting" android:layout_width="95.0dip" android:layout_height="wrap_content" android:text="停止" android:layout_x="226.0dip" android:layout_y="378.0dip" />
+</AbsoluteLayout>

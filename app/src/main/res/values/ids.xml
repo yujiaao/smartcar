@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="asd">false</item>
+    <item type="id" name="you">false</item>
+    <item type="id" name="you1">false</item>
+    <item type="id" name="hou">false</item>
+    <item type="id" name="hou1">false</item>
+    <item type="id" name="zuo">false</item>
+    <item type="id" name="zuo1">false</item>
+    <item type="id" name="qian">false</item>
+    <item type="id" name="qian1">false</item>
+    <item type="id" name="bj">false</item>
+    <item type="id" name="ks">false</item>
+    <item type="id" name="tc">false</item>
+    <item type="id" name="textView1">false</item>
+    <item type="id" name="gy1">false</item>
+    <item type="id" name="gy2">false</item>
+    <item type="id" name="ting">false</item>
+    <item type="id" name="linearLayout1">false</item>
+    <item type="id" name="tv_offers_points_label">false</item>
+    <item type="id" name="tv_offers_points">false</item>
+    <item type="id" name="btn_show_offers">false</item>
+    <item type="id" name="btn_refresh">false</item>
+    <item type="id" name="fh">false</item>
+    <item type="id" name="editText1">false</item>
+    <item type="id" name="But">false</item>
+    <item type="id" name="menu_settings">false</item>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:background="@drawable/k" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:id="@id/linearLayout1" android:layout_width="fill_parent" android:layout_height="wrap_content">
+        <TextView android:textAppearance="?android:textAppearanceLarge" android:textSize="30.0dip" android:textColor="#ffff0000" android:id="@id/tv_offers_points_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="你当前的积分为：" />
+        <TextView android:textAppearance="?android:textAppearanceLarge" android:textSize="30.0dip" android:textColor="#ff0000ff" android:id="@id/tv_offers_points" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+    </LinearLayout>
+    <Button android:textSize="33.0dip" android:id="@id/btn_show_offers" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="免费赚取积分(激活)" />
+    <Button android:textSize="35.0dip" android:id="@id/btn_refresh" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="刷新积分" />
+    <Button android:textSize="35.0dip" android:id="@id/fh" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="返回" />
+</LinearLayout>

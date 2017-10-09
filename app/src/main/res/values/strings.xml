@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Android小车遥控器</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">Android小车遥控器</string>
+    <string name="choice_bluetooth">请选择蓝牙设备</string>
+    <string name="connection_in_progress">正在连接,大约需要6s</string>
+</resources>
