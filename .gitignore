@@ -1,5 +1,7 @@
 .DS_Store
 .idea/
 *.iml
-
-
+.gradle/3.3/
+app/build/
+app/libs/
+build/
