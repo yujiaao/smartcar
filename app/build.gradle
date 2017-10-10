@@ -61,6 +61,7 @@ sourceSets {
     }
 }
 
+    buildToolsVersion '25.0.0'
 }
 
 
@@ -120,5 +121,5 @@ dependencies {
 
 
 
-    compile project(path: ':SliderPreference')
+  //  compile project(path: ':SliderPreference')
 }

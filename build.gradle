@@ -9,7 +9,7 @@ buildscript {
         //}
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.android.tools.build:gradle:2.3.3'
        // classpath 'org.codehaus.groovy:groovy-android-gradle-plugin:1.1.0'
     }
 }
@@ -22,16 +22,16 @@ allprojects {
 
 
 ext {
-   /*
+
     buildToolsVersion = "25"
 
     supportLibVersion = "25.2.0"
-    */
+
 //      buildToolsVersion = "19.1"
 //      supportLibVersion = "19"
 
-    buildToolsVersion = "24.0.3"
-    supportLibVersion = "24.2.1"
+  //  buildToolsVersion = "24.0.3"
+  //  supportLibVersion = "24.2.1"
 
     runnerVersion = "0.5"
     rulesVersion = "0.5"

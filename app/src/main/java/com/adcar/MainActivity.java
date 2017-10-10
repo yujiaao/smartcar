@@ -391,7 +391,7 @@ public class MainActivity
 
 
         };
-        if (!this.bt.isEnabled()) {
+        if (this.bt!=null && !this.bt.isEnabled()) {
             startActivityForResult(new Intent("android.bluetooth.adapter.action.REQUEST_ENABLE"), 1);
         }
         SharedPreferences localSharedPreferences = getSharedPreferences("share", 0);
@@ -433,20 +433,20 @@ public class MainActivity
                     if (MainActivity.this.bt == null) {
                         Log.i(TAG, "onClick: not bluetooth device found! try to find again...");
                         MainActivity.this.bt = BluetoothAdapter.getDefaultAdapter();
+                    }else {
+
+
+                        Set localSet = MainActivity.this.bt.getBondedDevices();
+                        if (localSet.size() <= 0) {
+                            Toast.makeText(MainActivity.this, "您没有配对的蓝牙设备", Toast.LENGTH_LONG).show();
+                            return;
+                        } else {
+
+                            Intent intent = new Intent(MainActivity.this, BlueToothDeviceChoiceListViewActivity.class);
+                            MainActivity.this.startActivityForResult(intent, CHOICE_BLUETOOTH);
+                        }
+
                     }
-
-
-                    Set localSet = MainActivity.this.bt.getBondedDevices();
-                    if (localSet.size() <= 0) {
-                        Toast.makeText(MainActivity.this, "您没有配对的蓝牙设备", Toast.LENGTH_LONG).show();
-                        return;
-                    } else {
-
-                        Intent intent = new Intent(MainActivity.this, BlueToothDeviceChoiceListViewActivity.class);
-                        MainActivity.this.startActivityForResult(intent, CHOICE_BLUETOOTH);
-                    }
-
-
                     break;
 
 
